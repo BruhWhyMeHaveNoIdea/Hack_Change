@@ -25,6 +25,19 @@ func NewUploaderHandler(svcObj *svc.Service) *UploaderHandler {
 // - file: файл
 // - task_id: id задания (string number)
 // Авторизованный userID должен быть в контексте как "userID" (middleware.AuthMiddleware)
+// @Summary Upload assignment file
+// @Description Upload a file for an assignment (creates assignment record)
+// @Tags assignments
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "file to upload"
+// @Param task_id formData int true "task id"
+// @Success 201 {object} dto.AssignmentResponse
+// @Failure 400 {object} dto.APIResponse
+// @Failure 401 {object} dto.APIResponse
+// @Failure 500 {object} dto.APIResponse
+// @Security bearerAuth
+// @Router /upload [post]
 func (h *UploaderHandler) Upload(c *gin.Context) {
 	uidAny, ok := c.Get("userID")
 	if !ok {

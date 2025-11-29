@@ -15,7 +15,11 @@ import (
 	"hack_change/internal/auth"
 	"hack_change/internal/middleware"
 
+	_ "hack_change/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -53,9 +57,13 @@ func main() {
 	// Инициализация репозиториев и сервисов
 	userRepo := repo.NewAuthUserRepository(db)
 	uploadRepo := repo.NewUploadRepository(db)
+	progressRepo := repo.NewProgressRepository(db)
+	feedbackRepo := repo.NewFeedbackRepository(db)
 	service := service.NewService(
 		userRepo,
 		uploadRepo,
+		progressRepo,
+		feedbackRepo,
 		jwtService,
 	)
 
@@ -75,7 +83,16 @@ func main() {
 	asg.Use(authMw)
 	{
 		asg.POST("/upload", uploader.Upload)
+		progressHandler := handler.NewProgressHandler(service)
+		asg.POST("/progress", progressHandler.CreateProgress)
+		progressSummaryHandler := handler.NewProgressSummaryHandler(service)
+		asg.GET("/progress/summary", progressSummaryHandler.GetSummary)
+		feedbackHandler := handler.NewFeedbackHandler(service)
+		asg.GET("/:assignmentId/feedback", feedbackHandler.GetFeedback)
 	}
+
+	// Swagger UI
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	log.Println("Server started on :8080")
 	r.Run(":8080")
