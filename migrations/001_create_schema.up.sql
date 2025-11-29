@@ -33,7 +33,6 @@ CREATE TABLE tasks (
     module_id INTEGER NOT NULL REFERENCES modules(module_id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     task_type VARCHAR(255) NOT NULL,
-    task_info TEXT,
     points_value INTEGER DEFAULT 0
 );
 

@@ -23,19 +23,21 @@ type AuthService interface {
 }
 
 type Service struct {
-	userRepo   repo.UserRepository
-	jwtService auth.JWTService
-	logger     logger.Logger
-	uploadRepo repo.UploadRepository
+	userRepo     repo.UserRepository
+	jwtService   auth.JWTService
+	logger       logger.Logger
+	uploadRepo   repo.UploadRepository
+	progressRepo repo.ProgressRepository
 }
 
 // NewService создает сервис
-func NewService(userRepo repo.UserRepository, uploadRepo repo.UploadRepository, jwtService auth.JWTService) *Service {
+func NewService(userRepo repo.UserRepository, uploadRepo repo.UploadRepository, progressRepo repo.ProgressRepository, jwtService auth.JWTService) *Service {
 	return &Service{
-		userRepo:   userRepo,
-		uploadRepo: uploadRepo,
-		jwtService: jwtService,
-		logger:     logger.New("service"),
+		userRepo:     userRepo,
+		uploadRepo:   uploadRepo,
+		progressRepo: progressRepo,
+		jwtService:   jwtService,
+		logger:       logger.New("service"),
 	}
 }
 
@@ -143,5 +145,36 @@ func (s *Service) UploadAssignment(ctx context.Context, studentID, taskID, origi
 	}
 
 	resp := dto.AssignmentToResponse(created)
+	return &resp, nil
+}
+
+// CreateProgress creates a progress record for a student and task
+func (s *Service) CreateProgress(ctx context.Context, req *dto.ProgressRequest) (*dto.ProgressResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("empty request")
+	}
+
+	// build model
+	p := &models.Progress{
+		StudentID:      req.StudentID,
+		TaskID:         req.TaskID,
+		Status:         req.Status,
+		CompletionDate: time.Now(),
+		Score:          req.Score,
+	}
+
+	created, err := s.progressRepo.CreateProgress(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := dto.ProgressResponse{
+		ProgressID:     created.ID,
+		StudentID:      created.StudentID,
+		TaskID:         created.TaskID,
+		Status:         created.Status,
+		CompletionDate: created.CompletionDate,
+		Score:          created.Score,
+	}
 	return &resp, nil
 }
