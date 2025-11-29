@@ -1,5 +1,6 @@
 ## Схема базы данных
 
+```mermaid
 erDiagram
     COURSES ||--o{ MODULES : "содержит"
     MODULES ||--o{ TASKS : "содержит"
@@ -75,3 +76,4 @@ erDiagram
         varchar(50) status "Состояние задачи: To Do, In Progress, Done"
         int4 priority "Приоритет задачи (1 - высокий, 3 - низкий)"
     }
+```
