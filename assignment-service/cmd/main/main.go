@@ -13,6 +13,7 @@ import (
 	"os"
 
 	"hack_change/internal/auth"
+	"hack_change/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -49,10 +50,12 @@ func main() {
 	// Инициализация JWT сервиса
 	jwtService := auth.NewJWTService(cfg.JWT)
 
-	// Инициализация сервисов
+	// Инициализация репозиториев и сервисов
 	userRepo := repo.NewAuthUserRepository(db)
+	uploadRepo := repo.NewUploadRepository(db)
 	service := service.NewService(
 		userRepo,
+		uploadRepo,
 		jwtService,
 	)
 
@@ -62,6 +65,16 @@ func main() {
 	{
 		auth.POST("/login", authHandler.Login)
 		auth.POST("/register", authHandler.Register)
+	}
+
+	// Загрузка заданий — защищённый роут
+	uploader := handler.NewUploaderHandler(service)
+	// подключаем JWT middleware
+	authMw := middleware.AuthMiddleware(jwtService)
+	asg := r.Group("/")
+	asg.Use(authMw)
+	{
+		asg.POST("/upload", uploader.Upload)
 	}
 
 	log.Println("Server started on :8080")

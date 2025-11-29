@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"fmt"
+	"hack_change/internal/auth"
 	"net/http"
 	"strings"
-	"hack_change/internal/auth"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +24,9 @@ func AuthMiddleware(jwtService auth.JWTService) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", claims.UserID)
+		// Put both int and string forms in context for backward compatibility
+		c.Set("userID_int", claims.UserID)
+		c.Set("userID", fmt.Sprintf("%d", claims.UserID))
 		c.Next()
 	}
 }

@@ -2,11 +2,12 @@ package dto
 
 import "time"
 
+// AssignmentResponse соответствует загруженному файлу (таблица assignments)
 type AssignmentResponse struct {
-	ID          string     `json:"id"`
-	CourseID    string     `json:"course_id"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	DueAt       *time.Time `json:"due_at,omitempty"`
-	MaxScore    float64    `json:"max_score"`
+	AssignmentID string    `json:"assignment_id"`
+	StudentID    string    `json:"student_id"`
+	TaskID       string    `json:"task_id"`
+	UploadDate   time.Time `json:"upload_date"`
+	FilePath     *string   `json:"file_path,omitempty"`
+	Status       string    `json:"status"`
 }

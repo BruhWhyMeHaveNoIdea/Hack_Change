@@ -11,7 +11,6 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id string) (*models.User, error)
 }
 
-type CourseRepository interface {
-	CreateCourse(ctx context.Context, teacherID string, course *models.Course) error
-	ListCourses(ctx context.Context, teacherID string) ([]*models.Course, error)
+type UploadRepository interface {
+	CreateAssignment(ctx context.Context, a *models.Assignment) (*models.Assignment, error)
 }

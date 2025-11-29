@@ -15,7 +15,7 @@ type Config struct {
 }
 
 type JWTService interface {
-	GenerateToken(userID string) (string, error)
+	GenerateToken(userID int64) (string, error)
 	ParseToken(tokenStr string) (*Claims, error)
 }
 
@@ -27,7 +27,7 @@ func NewJWTService(config Config) *jwtService {
 	return &jwtService{config: config}
 }
 
-func (s *jwtService) GenerateToken(userID string) (string, error) {
+func (s *jwtService) GenerateToken(userID int64) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{

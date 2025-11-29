@@ -1,7 +1,9 @@
 package dto
 
 import (
+	"fmt"
 	"hack_change/internal/models"
+	"time"
 )
 
 func UserToResponse(u *models.User) UserResponse {
@@ -36,18 +38,25 @@ func CourseToResponse(c *models.Course) CourseResponse {
 }
 
 func AssignmentToResponse(a *models.Assignment) AssignmentResponse {
-	var id, course string
+	var aid, sid, tid string
+	var upload time.Time
+	var fp *string
+	var status string
 	if a != nil {
-		id = a.ID.String()
-		course = a.CourseID.String()
+		aid = fmt.Sprintf("%d", a.ID)
+		sid = a.StudentID
+		tid = a.TaskID
+		upload = a.UploadDate
+		fp = a.FilePath
+		status = a.Status
 	}
 	return AssignmentResponse{
-		ID:          id,
-		CourseID:    course,
-		Title:       a.Title,
-		Description: a.Description,
-		DueAt:       a.DueAt,
-		MaxScore:    a.MaxScore,
+		AssignmentID: aid,
+		StudentID:    sid,
+		TaskID:       tid,
+		UploadDate:   upload,
+		FilePath:     fp,
+		Status:       status,
 	}
 }
 
