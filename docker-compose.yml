@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: learning-platform-postgres
+    restart: unless-stopped
+    env_file: .env  # Подключаем переменные окружения
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TZ}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - learning-platform-network
+
+  migrate:
+    image: migrate/migrate:latest
+    env_file: .env
+    command: -path /migrations -database ${DATABASE_URL} up
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learning-platform-network
+    restart: "no"
+
+  assignment-service:
+    build:
+      context: ./assignment-service
+      dockerfile: Dockerfile
+    container_name: assignment-service
+    env_file: .env
+    environment:
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learning-platform-network
+    restart: unless-stopped
+
+  swagger:
+    image: swaggerapi/swagger-ui
+    container_name: swagger
+    environment:
+      - SWAGGER_JSON=/swagger/swagger.yaml
+    volumes:
+      - ./assignment-service/docs:/swagger
+    ports:
+      - "5000:8080"
+    networks:
+      - learning-platform-network
+
+volumes:
+  postgres_data:
+
+networks:
+  learning-platform-network:
+    driver: bridge
