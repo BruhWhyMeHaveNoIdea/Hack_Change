@@ -14,7 +14,7 @@ type Config struct {
 	Host     string `env:"POSTGRES_HOST" env-default:"localhost"`
 	Port     string `env:"POSTGRES_PORT" env-default:"5432"`
 	DbName   string `env:"POSTGRES_DB" env-default:"yandex"`
-	Dsn      string `env:"LOCAL_DATABASE_URL" env-default:""`
+	Dsn      string `env:"DATABASE_URL" env-default:""`
 }
 
 type DB struct {
