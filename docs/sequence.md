@@ -22,8 +22,6 @@ sequenceDiagram
     Gateway-->>Frontend: 200 OK {jwtToken, refreshToken}
 
     Frontend->>Gateway: POST /auth/refresh {refreshToken}
-    Gateway->>DB: SELECT user WHERE email = ?
-    DB-->>Gateway: user data
     Gateway->>Gateway: generate JWT
     Gateway-->>Frontend: 200 OK {jwtToken}
 ```
