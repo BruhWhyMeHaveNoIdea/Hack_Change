@@ -1,7 +1,19 @@
 -- Up migration: create schema for courses, modules, tasks, students, progress,
 -- assignments, competencies and feedback_tickets
 BEGIN;
-
+ 
+-- Create enum types for status fields
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'progress_status') THEN
+        CREATE TYPE progress_status AS ENUM ('Completed','Failed','In Progress');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'assignment_status') THEN
+        CREATE TYPE assignment_status AS ENUM ('Черновик','На проверке','Проверено');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'feedback_status') THEN
+        CREATE TYPE feedback_status AS ENUM ('To Do','In Progress','Done');
+    END IF;
+END $$;
 CREATE TABLE courses (
     course_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     title VARCHAR(255) NOT NULL,
@@ -21,6 +33,7 @@ CREATE TABLE tasks (
     module_id INTEGER NOT NULL REFERENCES modules(module_id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     task_type VARCHAR(255) NOT NULL,
+    task_info TEXT,
     points_value INTEGER DEFAULT 0
 );
 
@@ -37,7 +50,7 @@ CREATE TABLE progress (
     progress_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     student_id INTEGER NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
     task_id INTEGER NOT NULL REFERENCES tasks(task_id) ON DELETE CASCADE,
-    status VARCHAR(255) NOT NULL,
+    status progress_status NOT NULL,
     completion_date TIMESTAMPTZ,
     score REAL
 );
@@ -48,7 +61,7 @@ CREATE TABLE assignments (
     task_id INTEGER NOT NULL REFERENCES tasks(task_id) ON DELETE CASCADE,
     upload_date TIMESTAMPTZ DEFAULT now(),
     file_path TEXT,
-    status VARCHAR(50) DEFAULT 'Черновик'
+    status assignment_status DEFAULT 'Черновик'
 );
 
 CREATE TABLE competencies (
@@ -64,7 +77,7 @@ CREATE TABLE feedback_tickets (
     assignment_id INTEGER NOT NULL REFERENCES assignments(assignment_id) ON DELETE CASCADE,
     competency_id INTEGER NOT NULL REFERENCES competencies(competency_id) ON DELETE CASCADE,
     description TEXT,
-    status VARCHAR(50) DEFAULT 'To Do',
+    status feedback_status DEFAULT 'To Do',
     priority INTEGER DEFAULT 3 CHECK (priority >= 1 AND priority <= 3)
 );
 
