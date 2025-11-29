@@ -39,6 +39,7 @@ erDiagram
         varchar(255) first_name "Имя студента"
         varchar(255) last_name "Фамилия студента"
         varchar(255) email "Электронная почта студента"
+        varchar(255) password "Пароль"
         date registration_date "Дата регистрации на платформе"
     }
 
