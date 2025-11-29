@@ -1,0 +1,361 @@
+swagger: "2.0"
+host: "localhost:8080"
+schemes:
+  - http
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+definitions:
+  dto.APIError:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  dto.APIResponse:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/dto.APIError'
+    type: object
+  dto.AssignmentResponse:
+    properties:
+      assignment_id:
+        type: string
+      file_path:
+        type: string
+      status:
+        type: string
+      student_id:
+        type: string
+      task_id:
+        type: string
+      upload_date:
+        type: string
+    type: object
+  dto.FeedbackItem:
+    properties:
+      description:
+        type: string
+      priority:
+        type: integer
+      skill_name:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.ProgressRequest:
+    properties:
+      score:
+        type: number
+      status:
+        type: string
+      studentId:
+        type: integer
+      taskId:
+        type: integer
+    required:
+    - status
+    - studentId
+    - taskId
+    type: object
+  dto.ProgressResponse:
+    properties:
+      completion_date:
+        type: string
+      progress_id:
+        type: integer
+      score:
+        type: number
+      status:
+        type: string
+      student_id:
+        type: integer
+      task_id:
+        type: integer
+    type: object
+  dto.ProgressSummaryResponse:
+    properties:
+      completed:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      password_confirm:
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - password_confirm
+    type: object
+  dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      role:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /{assignmentId}/feedback:
+    get:
+      consumes:
+      - application/json
+      description: Returns feedback tickets for a given assignment id
+      parameters:
+      - description: assignment id
+        in: path
+        name: assignmentId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.FeedbackItem'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get feedback for assignment
+      tags:
+      - feedback
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password
+      parameters:
+      - description: login request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Login student
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register new student account
+      parameters:
+      - description: register request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Register new student
+      tags:
+      - auth
+  /progress:
+    post:
+      consumes:
+      - application/json
+      description: Record progress for a student and a task
+      parameters:
+      - description: progress request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ProgressRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ProgressResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create progress record
+      tags:
+      - progress
+  /progress/summary:
+    get:
+      consumes:
+      - application/json
+      description: Returns total tasks and completed count for a student in a course
+      parameters:
+      - description: student id
+        in: query
+        name: studentId
+        required: true
+        type: integer
+      - description: course id
+        in: query
+        name: courseId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProgressSummaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get progress summary
+      tags:
+      - progress
+  /upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file for an assignment (creates assignment record)
+      parameters:
+      - description: file to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: task id
+        in: formData
+        name: task_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.AssignmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload assignment file
+      tags:
+      - assignments

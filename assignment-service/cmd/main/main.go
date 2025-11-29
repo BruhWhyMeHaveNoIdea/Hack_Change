@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"hack_change/internal/handler"
 	repo "hack_change/internal/repository"
-	"hack_change/internal/service"
+	svc "hack_change/internal/service"
 	"hack_change/pkg/config"
 	postgres "hack_change/pkg/db"
 	"hack_change/pkg/logger"
@@ -15,21 +15,28 @@ import (
 	"hack_change/internal/auth"
 	"hack_change/internal/middleware"
 
-	_ "hack_change/docs"
-
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
 	// Инициализация логгера
 	mainLogger := logger.New("hack_change")
 
+	fmt.Println(auth.HashPassword("password123"))
+
 	// Базовый контекст
 	ctx := context.Background()
 
 	r := gin.Default()
+	// CORS: разрешаем запросы от Swagger UI (контейнер на host localhost:5000)
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5000", "http://127.0.0.1:5000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	// Загрузка конфигурации
 	cfg, err := config.LoadConfig()
@@ -59,7 +66,7 @@ func main() {
 	uploadRepo := repo.NewUploadRepository(db)
 	progressRepo := repo.NewProgressRepository(db)
 	feedbackRepo := repo.NewFeedbackRepository(db)
-	service := service.NewService(
+	svcService := svc.NewService(
 		userRepo,
 		uploadRepo,
 		progressRepo,
@@ -67,8 +74,10 @@ func main() {
 		jwtService,
 	)
 
+	// подключаем JWT middleware
+	authMw := middleware.AuthMiddleware(jwtService)
 	// Публичные роуты (без JWT)
-	authHandler := handler.NewAuthHandler(service)
+	authHandler := handler.NewAuthHandler(svcService)
 	auth := r.Group("/auth")
 	{
 		auth.POST("/login", authHandler.Login)
@@ -76,23 +85,18 @@ func main() {
 	}
 
 	// Загрузка заданий — защищённый роут
-	uploader := handler.NewUploaderHandler(service)
-	// подключаем JWT middleware
-	authMw := middleware.AuthMiddleware(jwtService)
+	uploader := handler.NewUploaderHandler(svcService)
 	asg := r.Group("/")
 	asg.Use(authMw)
 	{
 		asg.POST("/upload", uploader.Upload)
-		progressHandler := handler.NewProgressHandler(service)
+		progressHandler := handler.NewProgressHandler(svcService)
 		asg.POST("/progress", progressHandler.CreateProgress)
-		progressSummaryHandler := handler.NewProgressSummaryHandler(service)
+		progressSummaryHandler := handler.NewProgressSummaryHandler(svcService)
 		asg.GET("/progress/summary", progressSummaryHandler.GetSummary)
-		feedbackHandler := handler.NewFeedbackHandler(service)
+		feedbackHandler := handler.NewFeedbackHandler(svcService)
 		asg.GET("/:assignmentId/feedback", feedbackHandler.GetFeedback)
 	}
-
-	// Swagger UI
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	log.Println("Server started on :8080")
 	r.Run(":8080")

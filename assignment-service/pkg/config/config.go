@@ -56,5 +56,7 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
+	// top-level parsed via individual parses above
+
 	return cfg, nil
 }
