@@ -28,14 +28,16 @@ type Service struct {
 	logger       logger.Logger
 	uploadRepo   repo.UploadRepository
 	progressRepo repo.ProgressRepository
+	feedbackRepo repo.FeedbackRepository
 }
 
 // NewService создает сервис
-func NewService(userRepo repo.UserRepository, uploadRepo repo.UploadRepository, progressRepo repo.ProgressRepository, jwtService auth.JWTService) *Service {
+func NewService(userRepo repo.UserRepository, uploadRepo repo.UploadRepository, progressRepo repo.ProgressRepository, feedbackRepo repo.FeedbackRepository, jwtService auth.JWTService) *Service {
 	return &Service{
 		userRepo:     userRepo,
 		uploadRepo:   uploadRepo,
 		progressRepo: progressRepo,
+		feedbackRepo: feedbackRepo,
 		jwtService:   jwtService,
 		logger:       logger.New("service"),
 	}
@@ -177,4 +179,41 @@ func (s *Service) CreateProgress(ctx context.Context, req *dto.ProgressRequest) 
 		Score:          created.Score,
 	}
 	return &resp, nil
+}
+
+// GetFeedbackByAssignment returns feedback items for a given assignment id
+func (s *Service) GetFeedbackByAssignment(ctx context.Context, assignmentID int64) ([]dto.FeedbackItem, error) {
+	if s.feedbackRepo == nil {
+		return nil, fmt.Errorf("feedback repository not initialized")
+	}
+
+	items, err := s.feedbackRepo.GetByAssignmentID(ctx, assignmentID)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []dto.FeedbackItem
+	for _, it := range items {
+		res = append(res, dto.FeedbackItem{
+			Description: it.Description,
+			Priority:    it.Priority,
+			Status:      it.Status,
+			SkillName:   it.SkillName,
+		})
+	}
+	return res, nil
+}
+
+// GetProgressSummary returns aggregated progress for a student in a course
+func (s *Service) GetProgressSummary(ctx context.Context, studentID int64, courseID int64) (*dto.ProgressSummaryResponse, error) {
+	if s.progressRepo == nil {
+		return nil, fmt.Errorf("progress repository not initialized")
+	}
+
+	sum, err := s.progressRepo.GetSummary(ctx, studentID, courseID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.ProgressSummaryResponse{Total: sum.Total, Completed: sum.Completed}, nil
 }

@@ -14,3 +14,12 @@ type UserRepository interface {
 type UploadRepository interface {
 	CreateAssignment(ctx context.Context, a *models.Assignment) (*models.Assignment, error)
 }
+
+type ProgressRepository interface {
+	CreateProgress(ctx context.Context, p *models.Progress) (*models.Progress, error)
+	GetSummary(ctx context.Context, studentID int64, courseID int64) (*models.ProgressSummary, error)
+}
+
+type FeedbackRepository interface {
+	GetByAssignmentID(ctx context.Context, assignmentID int64) ([]*models.FeedbackWithSkill, error)
+}

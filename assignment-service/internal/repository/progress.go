@@ -70,3 +70,30 @@ func (r *ProgressRepo) CreateProgress(ctx context.Context, p *models.Progress) (
 	r.logger.Debug(ctx, "created progress", "progressId", insertedID)
 	return p, nil
 }
+
+func (r *ProgressRepo) GetSummary(ctx context.Context, studentID int64, courseID int64) (*models.ProgressSummary, error) {
+	joinClause := fmt.Sprintf("progress p ON t.task_id = p.task_id AND p.student_id = %d", studentID)
+
+	qb := sq.Select("COUNT(t.task_id) AS total", "COUNT(p.task_id) AS completed").
+		From("tasks t").
+		LeftJoin(joinClause).
+		Join("modules m ON t.module_id = m.module_id").
+		Where(sq.Eq{"m.course_id": courseID}).
+		PlaceholderFormat(sq.Dollar)
+
+	sqlStr, args, err := qb.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build progress summary query: %w", err)
+	}
+
+	var res models.ProgressSummary
+	if err := r.db.Db.QueryRowContext(ctx, sqlStr, args...).Scan(&res.Total, &res.Completed); err != nil {
+		if err == sql.ErrNoRows {
+			return &res, nil
+		}
+		r.logger.Error(ctx, "failed to query progress summary", "error", err)
+		return nil, fmt.Errorf("failed to query progress summary: %w", err)
+	}
+
+	return &res, nil
+}
