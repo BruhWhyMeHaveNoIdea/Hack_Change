@@ -1,0 +1,13 @@
+-- Down migration: drop schema created by 001_create_schema.up.sql
+BEGIN;
+
+DROP TABLE IF EXISTS feedback_tickets CASCADE;
+DROP TABLE IF EXISTS competencies CASCADE;
+DROP TABLE IF EXISTS assignments CASCADE;
+DROP TABLE IF EXISTS progress CASCADE;
+DROP TABLE IF EXISTS students CASCADE;
+DROP TABLE IF EXISTS tasks CASCADE;
+DROP TABLE IF EXISTS modules CASCADE;
+DROP TABLE IF EXISTS courses CASCADE;
+
+COMMIT;
