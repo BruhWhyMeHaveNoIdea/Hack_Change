@@ -31,6 +31,7 @@ erDiagram
         int4 module_id FK "Ссылка на модуль, к которому относится задание"
         varchar(255) title "Название задания"
         varchar(255) task_type "Тип контента: Video, Quiz, Reading, Assignment"
+        text task_info "Описание задания"
         int4 points_value "Количество баллов за успешное выполнение"
     }
 
