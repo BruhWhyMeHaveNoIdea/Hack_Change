@@ -9,7 +9,6 @@ CONTENT_SERVICE_URL = os.getenv("CONTENT_SERVICE_URL", "http://courses-service:9
 
 @router.get("/courses")
 async def get_courses(request: Request):
-    # Проксируем запрос к Courses Service
     response = requests.get(
         f"{CONTENT_SERVICE_URL}/courses",
         params=dict(request.query_params),

@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
-# Используем порт 8080 для assignment-service
+# Порт 8080 для assignment-service
 ASSIGNMENT_SVC_URL = os.getenv("ASSIGNMENT_SVC_URL", "http://assignment-service:8080")
 
 @router.post("/assignments/upload")
