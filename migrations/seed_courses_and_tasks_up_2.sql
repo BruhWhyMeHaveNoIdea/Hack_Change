@@ -12,9 +12,21 @@
  Target Server Version : 180001 (180001)
  File Encoding         : 65001
 
- Date: 30/11/2025 03:22:58
+ Date: 30/11/2025 11:05:03
 */
 
+
+-- ----------------------------
+-- Sequence structure for progress_progress_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."progress_progress_id_seq";
+CREATE SEQUENCE "public"."progress_progress_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 2147483647
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."progress_progress_id_seq" OWNER TO "postgres";
 
 -- ----------------------------
 -- Table structure for assigments
@@ -41,9 +53,9 @@ COMMENT ON COLUMN "public"."assigments"."status" IS 'Статус проверк
 -- Records of assigments
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."assigments" ("assignment_id", "student_id", "task_id", "upload_date", "file_path", "status") VALUES (0, 0, 0, '2025-11-30 03:17:03.966469', '/uploads/ivan/task1.sql', 'На проверке');
-INSERT INTO "public"."assigments" ("assignment_id", "student_id", "task_id", "upload_date", "file_path", "status") VALUES (1, 0, 1, '2025-11-30 03:17:03.966469', '/uploads/ivan/task2.sql', 'На проверке');
-INSERT INTO "public"."assigments" ("assignment_id", "student_id", "task_id", "upload_date", "file_path", "status") VALUES (2, 0, 2, '2025-11-30 03:17:03.966469', '/uploads/ivan/task3.sql', 'На проверке');
+INSERT INTO "public"."assigments" ("assignment_id", "student_id", "task_id", "upload_date", "file_path", "status") VALUES (0, 1, 0, '2025-11-30 03:17:03.966469', '/uploads/ivan/task1.sql', 'На проверке');
+INSERT INTO "public"."assigments" ("assignment_id", "student_id", "task_id", "upload_date", "file_path", "status") VALUES (1, 1, 1, '2025-11-30 03:17:03.966469', '/uploads/ivan/task2.sql', 'На проверке');
+INSERT INTO "public"."assigments" ("assignment_id", "student_id", "task_id", "upload_date", "file_path", "status") VALUES (2, 1, 2, '2025-11-30 03:17:03.966469', '/uploads/ivan/task3.sql', 'На проверке');
 COMMIT;
 
 -- ----------------------------
@@ -69,7 +81,7 @@ COMMENT ON COLUMN "public"."competencies"."last_updated" IS 'Дата, когд�
 -- Records of competencies
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."competencies" ("competency_id", "student_id", "skill_name", "gap_level", "last_updated") VALUES (0, 0, 'SQL', 2, '2025-11-30 03:18:17.414825');
+INSERT INTO "public"."competencies" ("competency_id", "student_id", "skill_name", "gap_level", "last_updated") VALUES (0, 1, 'SQL', 2, '2025-11-30 03:18:17.414825');
 COMMIT;
 
 -- ----------------------------
@@ -160,7 +172,13 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."progress";
 CREATE TABLE "public"."progress" (
-  "progress_id" int4 NOT NULL,
+  "progress_id" int4 NOT NULL GENERATED ALWAYS AS IDENTITY (
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 2147483647
+START 1
+CACHE 1
+),
   "student_id" int4,
   "task_id" int4,
   "status" varchar(255) COLLATE "pg_catalog"."default",
@@ -180,9 +198,11 @@ COMMENT ON COLUMN "public"."progress"."score" IS 'Полученный балл 
 -- Records of progress
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."progress" ("progress_id", "student_id", "task_id", "status", "completion_date", "score") VALUES (0, 0, 0, 'Completed', '2025-11-30', 10);
-INSERT INTO "public"."progress" ("progress_id", "student_id", "task_id", "status", "completion_date", "score") VALUES (1, 0, 1, 'Completed', '2025-11-30', 9.5);
-INSERT INTO "public"."progress" ("progress_id", "student_id", "task_id", "status", "completion_date", "score") VALUES (2, 0, 2, 'Failed', '2025-11-30', 4);
+INSERT INTO "public"."progress" ("progress_id", "student_id", "task_id", "status", "completion_date", "score") OVERRIDING SYSTEM VALUE VALUES (0, 1, 0, 'Completed', '2025-11-30', 10);
+INSERT INTO "public"."progress" ("progress_id", "student_id", "task_id", "status", "completion_date", "score") OVERRIDING SYSTEM VALUE VALUES (1, 1, 1, 'Completed', '2025-11-30', 9.5);
+INSERT INTO "public"."progress" ("progress_id", "student_id", "task_id", "status", "completion_date", "score") OVERRIDING SYSTEM VALUE VALUES (4, 1, 3, 'Completed', '2025-11-30', 10);
+INSERT INTO "public"."progress" ("progress_id", "student_id", "task_id", "status", "completion_date", "score") OVERRIDING SYSTEM VALUE VALUES (2, 1, 2, 'Failed', '2025-11-30', 4);
+INSERT INTO "public"."progress" ("progress_id", "student_id", "task_id", "status", "completion_date", "score") OVERRIDING SYSTEM VALUE VALUES (6, 1, 4, 'Completed', '2025-11-30', 8);
 COMMIT;
 
 -- ----------------------------
@@ -210,7 +230,7 @@ COMMENT ON COLUMN "public"."students"."registration_date" IS 'Дата реги�
 -- Records of students
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."students" ("student_id", "first_name", "last_name", "email", "password", "registration_date") VALUES (0, 'Иван', 'Иванов', 'ivan@example.com', '$2a$10$c83aASYEZCKupTWCLSkVxO0d.SCFObdtg1s8iXXcK4IaR2fpUav0S', '2025-11-30');
+INSERT INTO "public"."students" ("student_id", "first_name", "last_name", "email", "password", "registration_date") VALUES (1, 'Иван', 'Иванов', 'ivan@example.com', '$2a$10$c83aASYEZCKupTWCLSkVxO0d.SCFObdtg1s8iXXcK4IaR2fpUav0S', '2025-11-30');
 COMMIT;
 
 -- ----------------------------
@@ -244,6 +264,13 @@ INSERT INTO "public"."tasks" ("task_id", "module_id", "title", "task_type", "poi
 COMMIT;
 
 -- ----------------------------
+-- Alter sequences owned by
+-- ----------------------------
+ALTER SEQUENCE "public"."progress_progress_id_seq"
+OWNED BY "public"."progress"."progress_id";
+SELECT setval('"public"."progress_progress_id_seq"', 6, true);
+
+-- ----------------------------
 -- Primary Key structure for table assigments
 -- ----------------------------
 ALTER TABLE "public"."assigments" ADD CONSTRAINT "assigments_pkey" PRIMARY KEY ("assignment_id");
@@ -267,6 +294,16 @@ ALTER TABLE "public"."feedback_tickets" ADD CONSTRAINT "feedback_tickets_pkey" P
 -- Primary Key structure for table modules
 -- ----------------------------
 ALTER TABLE "public"."modules" ADD CONSTRAINT "modules_pkey" PRIMARY KEY ("module_id");
+
+-- ----------------------------
+-- Auto increment value for progress
+-- ----------------------------
+SELECT setval('"public"."progress_progress_id_seq"', 6, true);
+
+-- ----------------------------
+-- Uniques structure for table progress
+-- ----------------------------
+ALTER TABLE "public"."progress" ADD CONSTRAINT "progress_student_task_uk" UNIQUE ("student_id", "task_id");
 
 -- ----------------------------
 -- Primary Key structure for table progress
