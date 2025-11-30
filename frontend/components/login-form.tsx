@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Некорректный email" }),
@@ -22,6 +26,8 @@ const formSchema = z.object({
 });
 
 export function LoginForm() {
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -31,7 +37,14 @@ export function LoginForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Login attempt:", values);
+    try {
+      setError(null);
+      await login(values.email, values.password);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Ошибка входа. Проверьте данные."
+      );
+    }
   }
 
   return (
@@ -76,6 +89,12 @@ export function LoginForm() {
                   </FormItem>
                 )}
               />
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <Button
                 type="submit"
                 className="w-full mt-6"
