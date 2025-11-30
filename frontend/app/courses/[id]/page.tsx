@@ -16,13 +16,15 @@ import { useRouter } from "next/navigation";
 
 const getTaskIcon = (type: string) => {
   switch (type) {
-    case "Video":
-      return "🎥";
-    case "Reading":
+    case "code":
+      return "💻";
+    case "text":
       return "📄";
-    case "Quiz":
+    case "video":
+      return "🎥";
+    case "quiz":
       return "❓";
-    case "Assignment":
+    case "assignment":
       return "📁";
     default:
       return "📝";
@@ -51,7 +53,7 @@ export default function CoursePage({
         setCourse(data);
         // Раскрываем первый модуль по умолчанию
         if (data.modules.length > 0) {
-          setExpandedModule(data.modules[0].moduleId);
+          setExpandedModule(data.modules[0].module_id);
         }
       } catch (err) {
         setError(
@@ -180,16 +182,16 @@ export default function CoursePage({
 
             <div className="space-y-4">
               {course.modules
-                .sort((a, b) => a.orderIndex - b.orderIndex)
+                .sort((a, b) => a.order_index - b.order_index)
                 .map((module) => (
-                  <Card key={module.moduleId}>
+                  <Card key={module.module_id}>
                     <CardHeader
                       className="pb-2 cursor-pointer"
-                      onClick={() => toggleModule(module.moduleId)}
+                      onClick={() => toggleModule(module.module_id)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-1">
-                          {expandedModule === module.moduleId ? (
+                          {expandedModule === module.module_id ? (
                             <ChevronDown className="h-5 w-5 text-muted-foreground" />
                           ) : (
                             <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -201,23 +203,21 @@ export default function CoursePage({
                         </Badge>
                       </div>
                     </CardHeader>
-                    {expandedModule === module.moduleId && (
+                    {expandedModule === module.module_id && (
                       <CardContent>
                         <div className="space-y-3">
                           {module.tasks.map((task) => (
                             <div
-                              key={task.taskId}
+                              key={task.task_id}
                               className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors"
                             >
                               <span className="text-xl mt-0.5">
-                                {getTaskIcon(task.type)}
+                                {getTaskIcon(task.task_type)}
                               </span>
                               <div className="flex-1">
                                 <p className="font-medium">{task.title}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  Тип: {task.type}
-                                  {task.duration && ` • Длительность: ${task.duration}`}
-                                  {task.deadline && ` • Дедлайн: ${task.deadline}`}
+                                  Тип: {task.task_type} • Баллы: {task.points_value}
                                 </p>
                               </div>
                               <Button
@@ -225,7 +225,7 @@ export default function CoursePage({
                                 size="sm"
                                 asChild
                               >
-                                <Link href={`/tasks/${task.taskId}`}>
+                                <Link href={`/tasks/${task.task_id}`}>
                                   Открыть
                                 </Link>
                               </Button>

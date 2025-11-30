@@ -20,30 +20,31 @@ export interface RefreshTokenResponse {
 
 // Types for Courses API
 export interface CourseListItem {
-  courseId: number;
-  courseName: string;
+  id: number;
+  title: string;
+  description: string;
   difficulty: string;
 }
 
 export interface Task {
-  taskId: number;
+  task_id: number;
   title: string;
-  type: string;
-  duration?: string;
-  deadline?: string;
+  task_type: string;
+  points_value: number;
 }
 
 export interface Module {
-  moduleId: number;
+  module_id: number;
   title: string;
-  orderIndex: number;
+  order_index: number;
   tasks: Task[];
 }
 
 export interface CourseDetails {
-  courseId: number;
+  id: number;
   title: string;
   description: string;
+  difficulty: string;
   modules: Module[];
 }
 

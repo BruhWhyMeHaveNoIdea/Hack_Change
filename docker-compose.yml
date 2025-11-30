@@ -3,7 +3,7 @@ services:
     image: postgres:15-alpine
     container_name: learning-platform-postgres
     restart: unless-stopped
-    env_file: .env  # Подключаем переменные окружения
+    env_file: .env # Подключаем переменные окружения
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -64,7 +64,7 @@ services:
       - "5000:8080"
     networks:
       - learning-platform-network
-  
+
   # PHP
   courses-service:
     build:
@@ -73,7 +73,7 @@ services:
     env_file: .env
     container_name: courses-service
     environment:
-      - PORT=8080
+      - PORT=9000
     ports:
       - "9000:9000"
     depends_on:
@@ -90,8 +90,8 @@ services:
     container_name: gateway
     env_file: .env
     environment:
-      CONTENT_SVC_URL: http://courses-service:9000  # Внутри Docker сети
-      ASSIGNMENT_SVC_URL: http://assignment-service:8080  # Внутри Docker сети
+      CONTENT_SVC_URL: http://courses-service:9000 # Внутри Docker сети
+      ASSIGNMENT_SVC_URL: http://assignment-service:8080 # Внутри Docker сети
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB}
@@ -111,7 +111,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
 
 volumes:
   postgres_data:

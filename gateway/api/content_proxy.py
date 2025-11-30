@@ -3,7 +3,7 @@ from fastapi.requests import Request
 import requests
 import os
 
-router = APIRouter()
+router = APIRouter(prefix = "/api")
 
 CONTENT_SERVICE_URL = os.getenv("CONTENT_SERVICE_URL", "http://courses-service:9000")
 

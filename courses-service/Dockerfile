@@ -1,34 +1,26 @@
-# Используем официальный образ PHP с PHP-FPM на базе Alpine
-FROM php:8.2-fpm-alpine
+# Используем CLI-образ (а не FPM!), потому что нам нужен HTTP-сервер
+FROM php:8.2-cli-alpine
 
-# Установка системных зависимостей и PHP-расширений для работы с PostgreSQL и кеширования
+# Установка расширений PostgreSQL
 RUN apk update && apk add --no-cache \
-    # PostgreSQL клиент и библиотеки разработки (libpq-dev нужен для сборки расширений)
-    postgresql-client \
-    libpq-dev \
-    \
-    # Добавляем инструменты сборки ($PHPIZE_DEPS) временно
-    $PHPIZE_DEPS \
-    \
-    # Устанавливаем расширения PHP: pdo_pgsql, pgsql (PostgreSQL) и opcache (производительность)
-    && docker-php-ext-install pdo_pgsql pgsql opcache \
-    \
-    # Удаляем инструменты сборки сразу после установки расширений для минимизации размера образа
-    && apk del $PHPIZE_DEPS \
+    postgresql-client libpq-dev \
+    && docker-php-ext-install pdo_pgsql pgsql \
     && rm -rf /var/cache/apk/*
 
-# Устанавливаем рабочую директорию
+# Рабочая директория
 WORKDIR /var/www/html
 
-# Копируем весь ваш код из текущей папки сборки в контейнер
-# (Предполагается, что Dockerfile находится в корневой папке вашего приложения)
-COPY . /var/www/html
+# Копируем код
+COPY . .
 
-# Устанавливаем правильные права доступа для пользователя www-data, под которым работает FPM
+# Даём права (опционально, но хорошо для безопасности)
 RUN chown -R www-data:www-data /var/www/html
 
-# PHP-FPM по умолчанию слушает на порту 9000
+# Переключаемся на непривилегированного пользователя
+USER www-data
+
+# Встроенный сервер будет слушать порт 9000
 EXPOSE 9000
 
-# Команда, которая запускает PHP-FPM
-CMD ["php-fpm"]
+# Запуск сервера на 0.0.0.0:9000
+CMD ["php", "-S", "0.0.0.0:9000", "index.php"]

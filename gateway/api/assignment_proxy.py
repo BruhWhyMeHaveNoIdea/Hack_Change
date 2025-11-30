@@ -2,7 +2,7 @@ import os
 import requests
 from fastapi import APIRouter, HTTPException
 
-router = APIRouter()
+router = APIRouter(prefix = "/api")
 
 # Порт 8080 для assignment-service
 ASSIGNMENT_SVC_URL = os.getenv("ASSIGNMENT_SVC_URL", "http://assignment-service:8080")

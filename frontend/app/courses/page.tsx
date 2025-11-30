@@ -109,21 +109,24 @@ export default function CoursesPage() {
               {courses.map((course, idx) => {
                 const globalIndex = currentPage * PAGE_SIZE + idx;
                 return (
-                  <Card key={course.courseId} className="flex flex-col h-full py-0">
+                  <Card key={course.id} className="flex flex-col h-full py-0">
                     <div
                       className={`${getGradient(globalIndex)} h-32 rounded-t-lg`}
                     />
                     <CardHeader className="p-4 pb-2">
-                      <CardTitle className="">{course.courseName}</CardTitle>
+                      <CardTitle className="">{course.title}</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
+                    <CardContent className="p-4 pt-0 space-y-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {course.description}
+                      </p>
                       <span className="inline-block px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded">
                         {course.difficulty}
                       </span>
                     </CardContent>
                     <CardFooter className="mt-auto p-4 pt-2">
                       <Button variant="outline" className="w-full" asChild>
-                        <Link href={`/courses/${course.courseId}`}>
+                        <Link href={`/courses/${course.id}`}>
                           Перейти к курсу
                         </Link>
                       </Button>
