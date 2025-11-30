@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/login");
   };
 
+  // Первоначальная проверка авторизации
   useEffect(() => {
     let mounted = true;
 
@@ -80,24 +81,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       setIsLoading(false);
 
-      // Редирект логика только при первой загрузке
-      const isLoginPage = pathname === "/login";
+      // Редирект логика только для главной страницы и страницы логина
       const isHomePage = pathname === "/";
-
+      const isLoginPage = pathname === "/login";
+      // ВРЕМЕННО: исключение для /tasks/101
+      const isTasks101 = pathname === "/tasks/101";
+      
       if (isHomePage) {
-        // Главная страница - редирект в зависимости от авторизации
         if (authenticated) {
           router.replace("/courses");
         } else {
           router.replace("/login");
         }
-      } else if (!authenticated && !isLoginPage) {
-        // Не авторизован и не на странице логина - редирект на логин
-        router.replace("/login");
-      } else if (authenticated && isLoginPage) {
-        // Авторизован и на странице логина - редирект на курсы
+      } else if (isLoginPage && authenticated) {
+        // Если авторизован и на странице логина, редиректим на курсы
         router.replace("/courses");
       }
+      // Для остальных страниц (включая /tasks/101) не делаем редирект - пусть компонент сам решает
     };
 
     initAuth();
@@ -106,6 +106,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
     };
   }, []); // Только при монтировании
+
+  // Проверка доступа к маршруту при изменении pathname (только для неавторизованных)
+  useEffect(() => {
+    if (isLoading) return; // Ждем завершения первоначальной проверки
+    if (isAuth) return; // Если уже авторизован, не проверяем
+
+    const isLoginPage = pathname === "/login";
+    const isHomePage = pathname === "/";
+    // ВРЕМЕННО: исключение для /tasks/101
+    const isTasks101 = pathname === "/tasks/101";
+    const isPublicRoute = isLoginPage || isHomePage || isTasks101;
+
+    // Если публичный маршрут, не делаем ничего
+    if (isPublicRoute) {
+      return;
+    }
+
+    // Для защищенных маршрутов проверяем токен
+    const token = getToken();
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+    
+    // Если токен истек, пытаемся обновить
+    if (isTokenExpired(token)) {
+      apiClient.refreshToken().then((refreshed) => {
+        if (refreshed) {
+          setIsAuth(true);
+        } else {
+          router.replace("/login");
+        }
+      });
+    } else {
+      // Если токен есть и не истек, обновляем состояние
+      setIsAuth(true);
+    }
+  }, [pathname, isAuth, isLoading, router]);
 
   // Периодическая проверка токена
   useEffect(() => {
