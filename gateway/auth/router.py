@@ -10,7 +10,7 @@ router = APIRouter(prefix="/auth")
 async def login(data: dict):
     email = data["email"]
     password = data["password"]
-    students = await get_all_students()
+    students = get_all_students()
 
     students_by_email = {student["email"]: student for student in students}
 
