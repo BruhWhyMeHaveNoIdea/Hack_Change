@@ -51,5 +51,14 @@ func (h *FeedbackHandler) GetFeedback(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.APIResponse{Data: items})
+	// return object with status and data array
+	resp := struct {
+		Status int         `json:"status"`
+		Data   interface{} `json:"data"`
+	}{
+		Status: http.StatusOK,
+		Data:   items,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
