@@ -3,8 +3,8 @@ package handler
 import (
 	"io"
 	"net/http"
+	"strconv"
 
-	"hack_change/internal/dto"
 	svc "hack_change/internal/service"
 	"hack_change/pkg/logger"
 
@@ -32,7 +32,7 @@ func NewUploaderHandler(svcObj *svc.Service) *UploaderHandler {
 // @Produce json
 // @Param file formData file true "file to upload"
 // @Param task_id formData int true "task id"
-// @Success 201 {object} dto.AssignmentResponse
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} dto.APIResponse
 // @Failure 401 {object} dto.APIResponse
 // @Failure 500 {object} dto.APIResponse
@@ -41,24 +41,24 @@ func NewUploaderHandler(svcObj *svc.Service) *UploaderHandler {
 func (h *UploaderHandler) Upload(c *gin.Context) {
 	uidAny, ok := c.Get("userID")
 	if !ok {
-		c.JSON(http.StatusUnauthorized, dto.APIResponse{Error: &dto.APIError{Code: "unauthenticated", Message: "missing user id"}})
+		c.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "assignmentId": "0"})
 		return
 	}
 	studentID, ok := uidAny.(string)
 	if !ok || studentID == "" {
-		c.JSON(http.StatusUnauthorized, dto.APIResponse{Error: &dto.APIError{Code: "unauthenticated", Message: "invalid user id"}})
+		c.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "assignmentId": "0"})
 		return
 	}
 
 	taskID := c.PostForm("task_id")
 	if taskID == "" {
-		c.JSON(http.StatusBadRequest, dto.APIResponse{Error: &dto.APIError{Code: "invalid_request", Message: "missing task_id"}})
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "assignmentId": "0"})
 		return
 	}
 
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, dto.APIResponse{Error: &dto.APIError{Code: "invalid_request", Message: "file is required"}})
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "assignmentId": "0"})
 		return
 	}
 	defer file.Close()
@@ -67,7 +67,7 @@ func (h *UploaderHandler) Upload(c *gin.Context) {
 	content, err := io.ReadAll(file)
 	if err != nil {
 		h.logger.Error(c.Request.Context(), "failed to read uploaded file", "error", err)
-		c.JSON(http.StatusInternalServerError, dto.APIResponse{Error: &dto.APIError{Code: "server_error", Message: "failed to read file"}})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "assignmentId": "0"})
 		return
 	}
 
@@ -75,9 +75,38 @@ func (h *UploaderHandler) Upload(c *gin.Context) {
 	resp, err := h.svc.UploadAssignment(c.Request.Context(), studentID, taskID, header.Filename, content)
 	if err != nil {
 		h.logger.Error(c.Request.Context(), "failed to persist assignment via service", "error", err)
-		c.JSON(http.StatusInternalServerError, dto.APIResponse{Error: &dto.APIError{Code: "server_error", Message: "failed to persist assignment"}})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "assignmentId": "0"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, dto.APIResponse{Data: resp})
+	// parse assignment id to int64 to fetch feedback
+	aid, err := strconv.ParseInt(resp.AssignmentID, 10, 64)
+	if err != nil {
+		// if parsing fails, still return OK with empty feedback
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "assignmentId": resp.AssignmentID, "feedback": []interface{}{}})
+		return
+	}
+
+	// fetch feedback items for the assignment
+	feedbackItems, err := h.svc.GetFeedbackByAssignment(c.Request.Context(), aid)
+	if err != nil {
+		// on error fetching feedback, return empty feedback list but still success
+		h.logger.Warn(c.Request.Context(), "failed to fetch feedback for assignment", "error", err)
+		c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "assignmentId": resp.AssignmentID, "feedback": []interface{}{}})
+		return
+	}
+
+	// map dto.FeedbackItem to expected shape {description, skill, priority, status}
+	var feedbackOut []gin.H
+	for _, it := range feedbackItems {
+		feedbackOut = append(feedbackOut, gin.H{
+			"description": it.Description,
+			"skill":       it.SkillName,
+			"priority":    it.Priority,
+			"status":      it.Status,
+		})
+	}
+
+	// return only array of feedback objects as requested: [{description, skill, priority, status}]
+	c.JSON(http.StatusOK, feedbackOut)
 }
