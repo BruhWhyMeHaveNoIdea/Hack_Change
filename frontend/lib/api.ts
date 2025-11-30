@@ -18,6 +18,35 @@ export interface RefreshTokenResponse {
   jwtToken: string;
 }
 
+// Types for Courses API
+export interface CourseListItem {
+  courseId: number;
+  courseName: string;
+  difficulty: string;
+}
+
+export interface Task {
+  taskId: number;
+  title: string;
+  type: string;
+  duration?: string;
+  deadline?: string;
+}
+
+export interface Module {
+  moduleId: number;
+  title: string;
+  orderIndex: number;
+  tasks: Task[];
+}
+
+export interface CourseDetails {
+  courseId: number;
+  title: string;
+  description: string;
+  modules: Module[];
+}
+
 class ApiClient {
   private baseUrl: string;
 
@@ -32,9 +61,9 @@ class ApiClient {
     const url = `${this.baseUrl}${endpoint}`;
     const token = this.getToken();
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (token) {
@@ -54,10 +83,13 @@ class ApiClient {
           // Повтор запроса с новым токеном
           const newToken = this.getToken();
           if (newToken) {
-            headers["Authorization"] = `Bearer ${newToken}`;
+            const retryHeaders: Record<string, string> = {
+              ...headers,
+              Authorization: `Bearer ${newToken}`,
+            };
             const retryResponse = await fetch(url, {
               ...options,
-              headers,
+              headers: retryHeaders,
             });
             if (!retryResponse.ok) {
               const errorText = await retryResponse.text();
@@ -170,12 +202,12 @@ class ApiClient {
   }
 
   // API методы для курсов
-  async getCourses(page: number = 0, size: number = 10) {
-    return this.request<any[]>(`/api/courses?page=${page}&size=${size}`);
+  async getCourses(page: number = 0, size: number = 10): Promise<CourseListItem[]> {
+    return this.request<CourseListItem[]>(`/api/courses?page=${page}&size=${size}`);
   }
 
-  async getCourseDetails(courseId: number) {
-    return this.request<any>(`/api/courses/${courseId}`);
+  async getCourseDetails(courseId: number): Promise<CourseDetails> {
+    return this.request<CourseDetails>(`/api/courses/${courseId}`);
   }
 }
 

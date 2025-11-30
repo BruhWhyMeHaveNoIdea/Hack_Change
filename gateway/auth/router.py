@@ -15,7 +15,7 @@ async def login(data: dict):
 
     students_by_email = {student["email"]: student for student in students}
 
-    if email not in students_by_email or bcrypt.checkpw(password, students_by_email[email]["password"]):
+    if email not in students_by_email or bcrypt.checkpw(password.encode('utf-8'), students_by_email[email]["password"].encode('utf-8')):
         return {
             "status": 401,
             "jwtToken": "",

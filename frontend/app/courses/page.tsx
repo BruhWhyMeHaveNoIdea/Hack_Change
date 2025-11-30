@@ -1,7 +1,7 @@
 // app/courses/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,57 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ChevronLeft, ChevronRight, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import FooterSection from "@/components/sections/footer/default";
-
-const mockCourses = [
-  {
-    courseId: 1,
-    courseName: "Основы SQL и реляционных баз данных",
-    difficulty: "Начальный",
-  },
-  {
-    courseId: 2,
-    courseName: "Алгоритмы и структуры данных",
-    difficulty: "Средний",
-  },
-  {
-    courseId: 3,
-    courseName: "Микросервисная архитектура",
-    difficulty: "Продвинутый",
-  },
-  {
-    courseId: 4,
-    courseName: "Введение в DevOps",
-    difficulty: "Начальный",
-  },
-  {
-    courseId: 5,
-    courseName: "Безопасность веб-приложений",
-    difficulty: "Средний",
-  },
-  {
-    courseId: 6,
-    courseName: "Распределённые системы",
-    difficulty: "Продвинутый",
-  },
-  {
-    courseId: 7,
-    courseName: "CI/CD и автоматизация",
-    difficulty: "Средний",
-  },
-  {
-    courseId: 8,
-    courseName: "Kubernetes в продакшене",
-    difficulty: "Продвинутый",
-  },
-  {
-    courseId: 9,
-    courseName: "Введение в Python",
-    difficulty: "Начальный",
-  },
-];
+import { apiClient, CourseListItem } from "@/lib/api";
 
 const getGradient = (index: number) => {
   const colors = [
@@ -80,20 +34,39 @@ const getGradient = (index: number) => {
 const PAGE_SIZE = 6;
 
 export default function CoursesPage() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(mockCourses.length / PAGE_SIZE);
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const paginatedCourses = mockCourses.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
-  );
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await apiClient.getCourses(currentPage, PAGE_SIZE);
+        setCourses(data);
+        // Предполагаем, что если вернулось меньше PAGE_SIZE, то это последняя страница
+        setTotalPages(data.length < PAGE_SIZE ? currentPage + 1 : currentPage + 2);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Ошибка загрузки курсов"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [currentPage]);
 
   const goToPrev = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+    if (currentPage > 0) setCurrentPage(currentPage - 1);
   };
 
   const goToNext = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    if (currentPage < totalPages - 1) setCurrentPage(currentPage + 1);
   };
 
   return (
@@ -112,55 +85,77 @@ export default function CoursesPage() {
       <main className="container py-8 px-8 min-w-full flex-grow">
         <h1 className="text-3xl font-bold mb-8">Доступные курсы</h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {paginatedCourses.map((course, idx) => {
-            const globalIndex = (currentPage - 1) * PAGE_SIZE + idx;
-            return (
-              <Card key={course.courseId} className="flex flex-col h-full py-0">
-                <div
-                  className={`${getGradient(globalIndex)} h-32 rounded-t-lg`}
-                />
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="">{course.courseName}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <span className="inline-block px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded">
-                    {course.difficulty}
-                  </span>
-                </CardContent>
-                <CardFooter className="mt-auto p-4 pt-2">
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link href={`/courses/${course.courseId}`}>
-                      Перейти к курсу
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center justify-between mt-10">
-          <Button
-            variant="outline"
-            onClick={goToPrev}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Назад
-          </Button>
-          <div className="text-sm text-muted-foreground">
-            Страница {currentPage} из {totalPages}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-          <Button
-            variant="outline"
-            onClick={goToNext}
-            disabled={currentPage === totalPages}
-          >
-            Вперёд
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Ошибка</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : courses.length === 0 ? (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Курсы не найдены</AlertTitle>
+            <AlertDescription>
+              На данный момент нет доступных курсов.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map((course, idx) => {
+                const globalIndex = currentPage * PAGE_SIZE + idx;
+                return (
+                  <Card key={course.courseId} className="flex flex-col h-full py-0">
+                    <div
+                      className={`${getGradient(globalIndex)} h-32 rounded-t-lg`}
+                    />
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="">{course.courseName}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <span className="inline-block px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded">
+                        {course.difficulty}
+                      </span>
+                    </CardContent>
+                    <CardFooter className="mt-auto p-4 pt-2">
+                      <Button variant="outline" className="w-full" asChild>
+                        <Link href={`/courses/${course.courseId}`}>
+                          Перейти к курсу
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between mt-10">
+              <Button
+                variant="outline"
+                onClick={goToPrev}
+                disabled={currentPage === 0}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Назад
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                Страница {currentPage + 1} из {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                onClick={goToNext}
+                disabled={currentPage >= totalPages - 1}
+              >
+                Вперёд
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </>
+        )}
       </main>
       <FooterSection />
     </div>

@@ -1,99 +1,152 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import FooterSection from "@/components/sections/footer/default";
-import { notFound } from "next/navigation";
-import { use } from 'react';
-
-type Task = {
-  taskId: number;
-  title: string;
-  taskType: "Video" | "Reading" | "Quiz" | "Assignment";
-  pointsValue: number;
-};
-
-type Module = {
-  moduleId: number;
-  title: string;
-  tasks: Task[];
-};
-
-type Course = {
-  courseId: number;
-  title: string;
-  description: string;
-  modules: Module[];
-};
-
-const mockCourse =[{
-  courseId: 1,
-  title: "Основы SQL и реляционных баз данных",
-  description:
-    "На этом курсе вы освоите язык SQL, научитесь проектировать реляционные базы данных, писать сложные запросы и оптимизировать производительность.",
-  modules: [
-    {
-      moduleId: 1,
-      title: "Введение в базы данных",
-      tasks: [
-        { taskId: 1, title: "Что такое СУБД?", taskType: "Video", pointsValue: 10 },
-        { taskId: 2, title: "Реляционная модель данных", taskType: "Reading", pointsValue: 5 },
-        { taskId: 3, title: "Первый SELECT-запрос", taskType: "Quiz", pointsValue: 15 },
-      ],
-    },
-    {
-      moduleId: 2,
-      title: "Сложные запросы",
-      tasks: [
-        { taskId: 4, title: "JOIN и его типы", taskType: "Video", pointsValue: 20 },
-        { taskId: 5, title: "Подзапросы и CTE", taskType: "Reading", pointsValue: 10 },
-        { taskId: 6, title: "Домашнее задание: оптимизация JOIN", taskType: "Assignment", pointsValue: 30 },
-      ],
-    },
-  ],
-}];
+import { use } from "react";
+import { apiClient, CourseDetails } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 const getTaskIcon = (type: string) => {
   switch (type) {
-    case "Video": return "🎥";
-    case "Reading": return "📄";
-    case "Quiz": return "❓";
-    case "Assignment": return "📁";
-    default: return "📝";
+    case "Video":
+      return "🎥";
+    case "Reading":
+      return "📄";
+    case "Quiz":
+      return "❓";
+    case "Assignment":
+      return "📁";
+    default:
+      return "📝";
   }
 };
 
-export default function CoursePage({ params }: { params: Promise<{ id: string }> }) {
-    
-  const [expandedModule, setExpandedModule] = useState<number | null>(1);
-    const { id } = use(params);
+export default function CoursePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const [expandedModule, setExpandedModule] = useState<number | null>(null);
+  const [course, setCourse] = useState<CourseDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { id } = use(params);
   const courseId = parseInt(id, 10);
+  const router = useRouter();
 
-  const course = mockCourse.find(c => c.courseId === courseId);
-  if (!course) notFound();
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await apiClient.getCourseDetails(courseId);
+        setCourse(data);
+        // Раскрываем первый модуль по умолчанию
+        if (data.modules.length > 0) {
+          setExpandedModule(data.modules[0].moduleId);
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Ошибка загрузки курса"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (courseId) {
+      fetchCourse();
+    }
+  }, [courseId]);
 
   const toggleModule = (id: number) => {
     setExpandedModule(expandedModule === id ? null : id);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <header className="border-b bg-[#003069]">
+          <div className="container flex h-16 items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/PSB_white.png"
+                alt="ПСБ_White"
+                className="h-15 w-auto"
+              />
+              <span className="text-lg font-semibold text-white">
+                Образовательная платформа
+              </span>
+            </div>
+          </div>
+        </header>
+        <main className="container py-8 px-8 min-w-full flex-grow">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </main>
+        <FooterSection />
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <header className="border-b bg-[#003069]">
+          <div className="container flex h-16 items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/PSB_white.png"
+                alt="ПСБ_White"
+                className="h-15 w-auto"
+              />
+              <span className="text-lg font-semibold text-white">
+                Образовательная платформа
+              </span>
+            </div>
+          </div>
+        </header>
+        <main className="container py-8 px-8 min-w-full flex-grow">
+          <Button variant="ghost" asChild className="mb-6 px-0">
+            <Link href="/courses">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Назад к курсам
+            </Link>
+          </Button>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Ошибка</AlertTitle>
+            <AlertDescription>
+              {error || "Курс не найден"}
+            </AlertDescription>
+          </Alert>
+        </main>
+        <FooterSection />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
-        <header className="border-b bg-[#003069]">
+      <header className="border-b bg-[#003069]">
         <div className="container flex h-16 items-center justify-between py-4">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <img src="/PSB_white.png" alt="ПСБ_White" className="h-15 w-auto" />
             <span className="text-lg font-semibold text-white">
-                Образовательная платформа
+              Образовательная платформа
             </span>
-            </div>
+          </div>
         </div>
-        </header>
+      </header>
 
       <main className="container py-8 px-8 min-w-full flex-grow">
         <Button variant="ghost" asChild className="mb-6 px-0">
@@ -126,48 +179,63 @@ export default function CoursePage({ params }: { params: Promise<{ id: string }>
             </Card>
 
             <div className="space-y-4">
-              {course.modules.map((module) => (
-                <Card key={module.moduleId}>
-                    <CardHeader className="pb-2 cursor-pointer" onClick={() => toggleModule(module.moduleId)}>
-                    <div className="flex items-center justify-between">
+              {course.modules
+                .sort((a, b) => a.orderIndex - b.orderIndex)
+                .map((module) => (
+                  <Card key={module.moduleId}>
+                    <CardHeader
+                      className="pb-2 cursor-pointer"
+                      onClick={() => toggleModule(module.moduleId)}
+                    >
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-1">
-                        {expandedModule === module.moduleId ? (
+                          {expandedModule === module.moduleId ? (
                             <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                        ) : (
+                          ) : (
                             <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        <CardTitle className="text-lg">{module.title}</CardTitle>
+                          )}
+                          <CardTitle className="text-lg">{module.title}</CardTitle>
                         </div>
                         <Badge variant="secondary">
-                        {module.tasks.length} заданий
+                          {module.tasks.length} заданий
                         </Badge>
-                    </div>
-                    </CardHeader>
-                  {expandedModule === module.moduleId && (
-                    <CardContent>
-                      <div className="space-y-3">
-                        {module.tasks.map((task) => (
-                          <div
-                            key={task.taskId}
-                            className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors"
-                          >
-                            <span className="text-xl mt-0.5">{getTaskIcon(task.taskType)}</span>
-                            <div className="flex-1">
-                              <p className="font-medium">{task.title}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Тип: {task.taskType} • Баллы: {task.pointsValue}
-                              </p>
-                            </div>
-                            <Button variant="outline" size="sm">
-                              Открыть
-                            </Button>
-                          </div>
-                        ))}
                       </div>
-                    </CardContent>
-                  )}
-                </Card>
-              ))}
+                    </CardHeader>
+                    {expandedModule === module.moduleId && (
+                      <CardContent>
+                        <div className="space-y-3">
+                          {module.tasks.map((task) => (
+                            <div
+                              key={task.taskId}
+                              className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors"
+                            >
+                              <span className="text-xl mt-0.5">
+                                {getTaskIcon(task.type)}
+                              </span>
+                              <div className="flex-1">
+                                <p className="font-medium">{task.title}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Тип: {task.type}
+                                  {task.duration && ` • Длительность: ${task.duration}`}
+                                  {task.deadline && ` • Дедлайн: ${task.deadline}`}
+                                </p>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                              >
+                                <Link href={`/tasks/${task.taskId}`}>
+                                  Открыть
+                                </Link>
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
             </div>
           </div>
 
