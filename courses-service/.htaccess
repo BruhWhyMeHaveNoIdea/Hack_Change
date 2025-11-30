@@ -1,0 +1,14 @@
+# Включаем механизм перезаписи URL
+RewriteEngine On
+
+# Запрещаем прямой доступ к файлу .env (современный синтаксис Apache 2.4)
+<Files .env>
+    Require all denied
+</Files>
+
+# Правила переадресации (Фронт-контроллер)
+# Если запрошенный URI не является существующим файлом (-f) или директорией (-d),
+# то перенаправляем его на index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]
