@@ -3,10 +3,11 @@ FROM python:3.13-slim
 WORKDIR /app
 
 # Установка системных зависимостей для psycopg2
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем зависимости first для лучшего кэширования
