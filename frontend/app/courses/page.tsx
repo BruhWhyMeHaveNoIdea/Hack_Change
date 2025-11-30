@@ -3,7 +3,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import FooterSection from "@/components/sections/footer/default";
@@ -79,7 +85,7 @@ export default function CoursesPage() {
 
   const paginatedCourses = mockCourses.slice(
     (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    currentPage * PAGE_SIZE,
   );
 
   const goToPrev = () => {
@@ -92,16 +98,16 @@ export default function CoursesPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-        <header className="border-b bg-[#003069] relative overflow-hidden">
+      <header className="border-b bg-[#003069] relative overflow-hidden">
         <div className="container flex h-16 items-center justify-between py-4 relative z-10">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <img src="/PSB_white.png" alt="ПСБ_White" className="h-15 w-auto" />
             <span className="text-lg font-semibold text-white">
-                Образовательная платформа
+              Образовательная платформа
             </span>
-            </div>
+          </div>
         </div>
-        </header>
+      </header>
 
       <main className="container py-8 px-8 min-w-full flex-grow">
         <h1 className="text-3xl font-bold mb-8">Доступные курсы</h1>
@@ -111,7 +117,9 @@ export default function CoursesPage() {
             const globalIndex = (currentPage - 1) * PAGE_SIZE + idx;
             return (
               <Card key={course.courseId} className="flex flex-col h-full py-0">
-                <div className={`${getGradient(globalIndex)} h-32 rounded-t-lg`} />
+                <div
+                  className={`${getGradient(globalIndex)} h-32 rounded-t-lg`}
+                />
                 <CardHeader className="p-4 pb-2">
                   <CardTitle className="">{course.courseName}</CardTitle>
                 </CardHeader>
@@ -121,16 +129,17 @@ export default function CoursesPage() {
                   </span>
                 </CardContent>
                 <CardFooter className="mt-auto p-4 pt-2">
-                <Button variant="outline" className="w-full" asChild>
-                    <Link href={`/courses/${course.courseId}`}>Перейти к курсу</Link>
-                </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href={`/courses/${course.courseId}`}>
+                      Перейти к курсу
+                    </Link>
+                  </Button>
                 </CardFooter>
               </Card>
             );
           })}
         </div>
 
-        {/* Пагинация */}
         <div className="flex items-center justify-between mt-10">
           <Button
             variant="outline"
