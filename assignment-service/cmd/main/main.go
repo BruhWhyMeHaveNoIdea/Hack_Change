@@ -84,6 +84,11 @@ func main() {
 		auth.POST("/register", authHandler.Register)
 	}
 
+	// Health endpoints (public)
+	healthHandler := handler.NewHealthHandler(db)
+	r.GET("/health", healthHandler.Health)
+	r.GET("/health/detailed", healthHandler.Detailed)
+
 	// Загрузка заданий — защищённый роут
 	uploader := handler.NewUploaderHandler(svcService)
 	asg := r.Group("/")
