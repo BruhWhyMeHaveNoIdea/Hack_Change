@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # 1. КОНТЕЙНЕР PHP-FPM (Ваш бэкенд)
+  php:
+    build:
+      context: . # Использовать текущую директорию для Dockerfile
+      dockerfile: Dockerfile
+    image: content-service-php
+    volumes:
+      - .:/var/www/html # Монтируем ваш код для разработки
+    # FPM будет слушать на внутреннем порту 9000
+    expose:
+      - 9000
+
+  # 2. КОНТЕЙНЕР WEBSERVER (Nginx)
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80" # Открываем порт 80 на хосте
+    volumes:
+      - .:/var/www/html # Монтируем тот же код
+      # Подключаем конфигурацию Nginx, которая будет проксировать запросы к PHP-FPM
+      # - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php # Зависит от контейнера PHP

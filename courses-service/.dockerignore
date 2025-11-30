@@ -1,0 +1,17 @@
+#Игнорировать Git
+
+.git
+.gitignore
+
+#Игнорировать локальные зависимости (они будут установлены в Docker)
+
+vendor/
+node_modules/
+npm-debug.log
+
+И#гнорировать кэш и временные файлы PHP/Composer
+
+var/cache/*
+storage/logs/*
+tmp/
+*.bak
