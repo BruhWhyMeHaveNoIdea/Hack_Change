@@ -7,4 +7,4 @@ class Students(BaseModel):
     last_name: str
     email: str
     password: str
-    date: datetime
+    registration_date: datetime

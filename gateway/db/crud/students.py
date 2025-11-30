@@ -11,7 +11,7 @@ def create_student(student: Students):
             last_name=student.last_name,
             email=student.email,
             password=student.password,
-            date=student.date
+            registration_date=student.registration_date
         )
         session.add(student_db)
         session.commit()
