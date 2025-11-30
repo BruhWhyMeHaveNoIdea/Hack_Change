@@ -1,11 +1,11 @@
+from sqlalchemy.orm import Session
 from db.db import engine
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text, select, delete, update
+from sqlalchemy import select, delete
 from db.models.models import Students
 from db.schemas.schemas import Students as StudentsDB
 
-async def create_student(student: Students):
-    async with AsyncSession(engine) as session:
+def create_student(student: Students):
+    with Session(engine) as session:
         student_db = StudentsDB(
             first_name=student.first_name,
             last_name=student.last_name,
@@ -14,26 +14,26 @@ async def create_student(student: Students):
             date=student.date
         )
         session.add(student_db)
-        await session.commit()
+        session.commit()
 
-
-async def read_student(student_id: int):
-    async with AsyncSession(engine) as session:
-        result = await session.execute(select(StudentsDB).where(StudentsDB.student_id == student_id)
+def read_student(student_id: int):
+    with Session(engine) as session:
+        result = session.execute(
+            select(StudentsDB).where(StudentsDB.student_id == student_id)
         )
         query = result.scalars().first()
         return query
 
+def delete_student(student_id: int):
+    with Session(engine) as session:
+        session.execute(
+            delete(StudentsDB).where(StudentsDB.student_id == student_id)
+        )
+        session.commit()
 
-async def delete_student(student_id: int):
-    async with AsyncSession(engine) as session:
-        await session.execute(delete(StudentsDB).where(StudentsDB.student_id == student_id))
-        await session.commit()
-
-
-async def get_all_students():
-    async with AsyncSession(engine) as session:
-        result = await session.execute(select(StudentsDB))
+def get_all_students():
+    with Session(engine) as session:
+        result = session.execute(select(StudentsDB))
         students = result.scalars().all()
         
         students_list = []

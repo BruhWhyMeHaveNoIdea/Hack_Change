@@ -42,7 +42,7 @@ services:
     container_name: assignment-service
     env_file: .env
     environment:
-      - PORT=8080
+      - PORT:8080
     ports:
       - "8080:8080"
     depends_on:
@@ -71,9 +71,9 @@ services:
       context: ./courses-service
       dockerfile: Dockerfile
     env_file: .env
-    container_name: assignment-service
+    container_name: courses-service
     environment:
-      PORT=9000
+      - PORT=8080
     ports:
       - "9000:9000"
     depends_on:
@@ -85,20 +85,32 @@ services:
 
   gateway:
     build:
-      context: ./assignment-service
+      context: ./gateway
       dockerfile: Dockerfile
     container_name: gateway
     env_file: .env
     environment:
-      CONTENT_SVC_URL: ${CONTENT_SVC_URL} 
-      ASSIGNMENT_SVC_URL: ${ASSIGNMENT_SVC_URL}
+      CONTENT_SVC_URL: http://courses-service:9000  # Внутри Docker сети
+      ASSIGNMENT_SVC_URL: http://assignment-service:8080  # Внутри Docker сети
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     ports:
-      - "8080:8080"
+      - "8000:8000"
     depends_on:
-      - courses-service
-      - assignment-service
+      postgres:
+        condition: service_healthy
     networks:
       - learning-platform-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 
 volumes:
