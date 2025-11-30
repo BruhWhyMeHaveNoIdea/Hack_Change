@@ -319,13 +319,13 @@ try {
 
                 // PostgreSQL UPSERT: Вставить или Обновить. Гарантирует атомарность.
                 $sql = "
-                    INSERT INTO progress (student_id, task_id, status, score, last_updated_at)
-                    VALUES (:studentId, :taskId, :status, :score, NOW())
+                    INSERT INTO progress (student_id, task_id, status, completion_date, score)
+                    VALUES (:studentId, :taskId, :status, NOW(), :score)
                     ON CONFLICT (student_id, task_id) DO UPDATE
                     SET status = EXCLUDED.status, 
-                        score = EXCLUDED.score, 
-                        last_updated_at = NOW()
-                    RETURNING progress_id, student_id, task_id, status, score, last_updated_at
+                        completion_date = NOW(),
+                        score = EXCLUDED.score
+                    RETURNING progress_id, student_id, task_id, status, completion_date, score
                 ";
 
                 $stmt = $pdo->prepare($sql);

@@ -12,9 +12,21 @@
  Target Server Version : 180001 (180001)
  File Encoding         : 65001
 
- Date: 30/11/2025 03:21:57
+ Date: 30/11/2025 11:04:42
 */
 
+
+-- ----------------------------
+-- Sequence structure for progress_progress_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."progress_progress_id_seq";
+CREATE SEQUENCE "public"."progress_progress_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 2147483647
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."progress_progress_id_seq" OWNER TO "postgres";
 
 -- ----------------------------
 -- Table structure for assigments
@@ -116,7 +128,13 @@ COMMENT ON COLUMN "public"."modules"."order_index" IS 'Порядковый но
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."progress";
 CREATE TABLE "public"."progress" (
-  "progress_id" int4 NOT NULL,
+  "progress_id" int4 NOT NULL GENERATED ALWAYS AS IDENTITY (
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 2147483647
+START 1
+CACHE 1
+),
   "student_id" int4,
   "task_id" int4,
   "status" varchar(255) COLLATE "pg_catalog"."default",
@@ -173,6 +191,13 @@ COMMENT ON COLUMN "public"."tasks"."task_type" IS 'Тип контента: Vide
 COMMENT ON COLUMN "public"."tasks"."points_value" IS 'Количество баллов за успешное выполнение';
 
 -- ----------------------------
+-- Alter sequences owned by
+-- ----------------------------
+ALTER SEQUENCE "public"."progress_progress_id_seq"
+OWNED BY "public"."progress"."progress_id";
+SELECT setval('"public"."progress_progress_id_seq"', 6, true);
+
+-- ----------------------------
 -- Primary Key structure for table assigments
 -- ----------------------------
 ALTER TABLE "public"."assigments" ADD CONSTRAINT "assigments_pkey" PRIMARY KEY ("assignment_id");
@@ -196,6 +221,11 @@ ALTER TABLE "public"."feedback_tickets" ADD CONSTRAINT "feedback_tickets_pkey" P
 -- Primary Key structure for table modules
 -- ----------------------------
 ALTER TABLE "public"."modules" ADD CONSTRAINT "modules_pkey" PRIMARY KEY ("module_id");
+
+-- ----------------------------
+-- Uniques structure for table progress
+-- ----------------------------
+ALTER TABLE "public"."progress" ADD CONSTRAINT "progress_student_task_uk" UNIQUE ("student_id", "task_id");
 
 -- ----------------------------
 -- Primary Key structure for table progress
