@@ -13,7 +13,7 @@ COPY . .
 # Disable Next.js ESLint check during Docker build to avoid CI-blocking lint errors
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_DISABLE_ESLINT=1
-RUN npm run build
+RUN npm run build:frontend
 
 # Runtime image
 FROM node:20-alpine AS runner

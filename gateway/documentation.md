@@ -58,7 +58,8 @@
   {
     "courseId": "Integer",
     "courseName": "String",
-    "difficulty": "String"
+    "difficulty": "String",
+    "description": "String"
   }
 ]
 ```
@@ -114,7 +115,10 @@
 {
   "taskId": "Integer",
   "status": "String",
-  "score": "Integer"
+  "score": "Integer",
+  "completion_date": "String[Datetime]",
+  "progress_id": "Integer",
+  "student_id": "Integer",
 }
 ```
 
@@ -149,3 +153,5 @@
   "assignmentID": "Integer"
 }
 ```
+
+
